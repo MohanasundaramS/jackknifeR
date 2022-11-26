@@ -1,0 +1,15 @@
+Package: jackknifeR
+Title: Jackknife linear regression and correlation.
+Version: 0.1
+Authors@R: 
+    person("S.", "Mohanasundaram", , "s.mohanasundaram@outlook.com", role = c("aut", "cre"),
+           comment = c("ORCID = 0000-0003-4639-9419"))
+Description: This function creates jackknife samples from the data by 
+    sequentially removing d observations from the data, performs linear regression 
+    or correlation using the jackknife samples and estimates 
+    the jackknife coefficients bias standard error, standard error and 
+    confidence intervals.
+License: CC BY 4.0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.2
