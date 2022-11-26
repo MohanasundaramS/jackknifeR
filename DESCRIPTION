@@ -1,6 +1,6 @@
 Package: jackknifeR
 Title: Jackknife linear regression and correlation
-Version: 0.1
+Version: 0.1.0
 Authors@R: 
     person("S.", "Mohanasundaram", , "s.mohanasundaram@outlook.com", role = c("aut", "cre"),
            comment = c("ORCID = 0000-0003-4639-9419"))
