@@ -1,5 +1,5 @@
 Package: jackknifeR
-Title: Jackknife linear regression and correlation.
+Title: Jackknife linear regression and correlation
 Version: 0.1
 Authors@R: 
     person("S.", "Mohanasundaram", , "s.mohanasundaram@outlook.com", role = c("aut", "cre"),

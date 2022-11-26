@@ -25,6 +25,8 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \url{https://doi.org/10.1016/0167-7152(88)90011-9}
 #' @seealso [lm()] which is used for linear regression.
+#' @importFrom stats coefficients cor lm qnorm
+#' @importFrom utils combn
 #' @export
 #' @examples
 #' j.lm <- jackknife.lm(dist~speed, d = 2, data = cars)
@@ -35,7 +37,7 @@ jackknife.lm <- function(formula, d,  data){
 
   n <- nrow(data)
 
-  if((n*ncol())^d > 2e+08){message("This may take more time. Please wait...")}
+  if((n*ncol(data))^d > 2e+08){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
   N <- ncol(cmb)     # Total number of jackknife samples

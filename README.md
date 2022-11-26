@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of jackknifeR is to perform Jackknife on regression or correlation estimation.
+The package jackknifeR includes the functions to perform Jackknife on regression or correlation estimation.
 
 ``` r
 library(jackknifeR)

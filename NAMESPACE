@@ -2,3 +2,8 @@
 
 export(jackknife.cor)
 export(jackknife.lm)
+importFrom(stats,coefficients)
+importFrom(stats,cor)
+importFrom(stats,lm)
+importFrom(stats,qnorm)
+importFrom(utils,combn)

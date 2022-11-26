@@ -23,6 +23,8 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \url{https://doi.org/10.1016/0167-7152(88)90011-9}
 #' @seealso [cor()] which is used to estimate correlation coefficient.
+#' @importFrom stats coefficients cor lm qnorm
+#' @importFrom utils combn
 #' @export
 #' @examples
 #' j.cor <- jackknife.cor(cars$speed, cars$dist, d = 2)
