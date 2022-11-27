@@ -48,14 +48,15 @@ jackknife.cor <- function(x, y, d){
   theta_hat <- cor(x, y) # Biased Correlation Estimate
   theta_dot_hat <- mean(jk) # Mean of correlation estimates of jackknife samples
   bias <- (n-d) * (theta_dot_hat-theta_hat) #Bias
+  est <- theta_hat - bias
   jack_se <- sqrt(((n-d)/d)  *  mean((jk-theta_hat)^2)) # Jackknife standard error
-  jack_ci_lower <- theta_dot_hat-bias-(qnorm(0.975)*jack_se)
-  jack_ci_upper <- theta_dot_hat-bias+(qnorm(0.975)*jack_se)
+  jack_ci_lower <- est-(qnorm(0.975)*jack_se)
+  jack_ci_upper <- est+(qnorm(0.975)*jack_se)
 
-  jackknife.summary <- data.frame(Estimate = theta_dot_hat-bias,
+  jackknife.summary <- data.frame(Estimate = est,
                                   bias = bias,
                                   se = jack_se,
-                                  t = theta_dot_hat/jack_se,
+                                  t = est/jack_se,
                                   ci.lower = jack_ci_lower,
                                   ci.upper = jack_ci_upper)
 
