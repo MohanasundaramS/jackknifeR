@@ -36,15 +36,15 @@ summary(j.lm$lm_mod)$coefficients
 \references{
 Quenouille, M. H. (1956). Notes on Bias in Estimation.
 \emph{Biometrika}, \emph{43}(3/4), 353-360.
-\url{https://doi.org/10.2307/2332914}
+\doi{10.2307/2332914}
 
 Tukey, J. W. (1958). Bias and Confidence in Not-quite Large Samples.
 \emph{Annals of Mathematical Statistics}, \emph{29}(2), 614-623.
-\url{https://doi.org/10.1214/aoms/1177706647}
+\doi{10.1214/aoms/1177706647}
 
 Shi, X. (1988). A note on the delete-d jackknife variance estimators.
 \emph{Statistics & Probability Letters}, \emph{6}(5), 341-347.
-\url{https://doi.org/10.1016/0167-7152(88)90011-9}
+\doi{10.1016/0167-7152(88)90011-9}
 }
 \seealso{
 \code{\link[=lm]{lm()}} which is used for linear regression.
