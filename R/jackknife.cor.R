@@ -15,13 +15,13 @@
 #'
 #' @references Quenouille, M. H. (1956). Notes on Bias in Estimation.
 #' *Biometrika*, *43*(3/4), 353-360.
-#' \url{https://doi.org/10.2307/2332914}
+#' \doi{10.2307/2332914}
 #' @references Tukey, J. W. (1958). Bias and Confidence in Not-quite Large Samples.
 #' *Annals of Mathematical Statistics*, *29*(2), 614-623.
-#' \url{https://doi.org/10.1214/aoms/1177706647}
+#' \doi{10.1214/aoms/1177706647}
 #' @references Shi, X. (1988). A note on the delete-d jackknife variance estimators.
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
-#' \url{https://doi.org/10.1016/0167-7152(88)90011-9}
+#' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [cor()] which is used to estimate correlation coefficient.
 #' @importFrom stats coefficients cor lm qnorm
 #' @importFrom utils combn
