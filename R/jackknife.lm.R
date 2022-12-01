@@ -37,7 +37,8 @@ jackknife.lm <- function(formula, d,  data, conf = 0.95){
 
   n <- nrow(data)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*ncol(data))^d > 2e+08){message("This may take more time. Please wait...")}
+  if((n*ncol(data))^d > 9e+06) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
+  if((n*ncol(data))^d > 1e+04){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
   N <- ncol(cmb)     # Total number of jackknife samples
