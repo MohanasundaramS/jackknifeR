@@ -8,6 +8,7 @@
 #'
 #' @param x,y Numeric vectors of equal length
 #' @param d Number of observations to be deleted from data to make jackknife samples
+#' @param conf Confidence level, a positive number < 1. The default is 0.95.
 #' @return A list containing a summary data frame of jackknife correlation
 #'    coefficient estimates with bias, standard error. t-statistics,
 #'    and confidence intervals,correlation estimate of original data and
@@ -31,9 +32,9 @@
 #' j.cor$jackknife.summary
 #' j.cor$biased_cor
 #'
-jackknife.cor <- function(x, y, d){
+jackknife.cor <- function(x, y, d, conf = 0.95){
   n <- length(x)
-
+  if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
   if((n*2)^d > 2e+08){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
@@ -50,8 +51,8 @@ jackknife.cor <- function(x, y, d){
   bias <- (n-d) * (theta_dot_hat-theta_hat) #Bias
   est <- theta_hat - bias
   jack_se <- sqrt(((n-d)/d)  *  mean((jk-theta_hat)^2)) # Jackknife standard error
-  jack_ci_lower <- est-(qnorm(0.975)*jack_se)
-  jack_ci_upper <- est+(qnorm(0.975)*jack_se)
+  jack_ci_lower <- est-(qnorm(0.5+(conf/2))*jack_se)
+  jack_ci_upper <- est+(qnorm(0.5+(conf/2))*jack_se)
 
   jackknife.summary <- data.frame(Estimate = est,
                                   bias = bias,

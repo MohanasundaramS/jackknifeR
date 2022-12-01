@@ -8,8 +8,8 @@
 #'
 #' @param formula Simple or multiple  linear regression formula with dependent and independent variables
 #' @param d Number of observations to be deleted from data to make jackknife samples
-#' @param data Data frame with dependent and independent independent variables
-#'    specified in the formula
+#' @param data Data frame with dependent and independent independent variables specified in the formula
+#' @param conf Confidence level, a positive number < 1. The default is 0.95.
 #' @return A list containing a summary data frame of jackknife estimates
 #'    with bias, standard error. t-statistics, and confidence intervals,
 #'    linear regression model of original data and a data frame with
@@ -33,10 +33,10 @@
 #' j.lm$jackknife.summary
 #' summary(j.lm$lm_mod)$coefficients
 #'
-jackknife.lm <- function(formula, d,  data){
+jackknife.lm <- function(formula, d,  data, conf = 0.95){
 
   n <- nrow(data)
-
+  if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
   if((n*ncol(data))^d > 2e+08){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
@@ -59,8 +59,8 @@ jackknife.lm <- function(formula, d,  data){
   bias <- (n-d) * (theta_dot_hat-theta_hat) # Bias
   est <- theta_hat-bias
   jack_se <- sqrt((n-d)/d  *  rowMeans(apply(jk, 1, function(x) (x-theta_hat)^2))) # Jackknife standard error
-  jack_ci_lower <- est-(qnorm(0.975)*jack_se)
-  jack_ci_upper <- est+(qnorm(0.975)*jack_se)
+  jack_ci_lower <- est-(qnorm(0.5+(conf/2))*jack_se)
+  jack_ci_upper <- est+(qnorm(0.5+(conf/2))*jack_se)
 
   jackknife.summary <- data.frame(Estimate = est,
                                   bias = bias,
