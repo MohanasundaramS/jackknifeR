@@ -4,15 +4,16 @@
 \alias{jackknife.lm}
 \title{Delete-d Jackknife Estimate for Linear Regression}
 \usage{
-jackknife.lm(formula, d, data)
+jackknife.lm(formula, d, data, conf = 0.95)
 }
 \arguments{
 \item{formula}{Simple or multiple  linear regression formula with dependent and independent variables}
 
 \item{d}{Number of observations to be deleted from data to make jackknife samples}
 
-\item{data}{Data frame with dependent and independent independent variables
-specified in the formula}
+\item{data}{Data frame with dependent and independent independent variables specified in the formula}
+
+\item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
 }
 \value{
 A list containing a summary data frame of jackknife estimates
