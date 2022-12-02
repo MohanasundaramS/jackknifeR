@@ -12,7 +12,7 @@ Description: This function creates jackknife samples from the data by
     Quenouille (1956) <doi:10.2307/2332914>, 
     Tukey (1958) <doi:10.1214/aoms/1177706647> and
     Shi (1988) <doi:10.1016/0167-7152(88)90011-9>.
-License: CC BY 4.0
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.2
