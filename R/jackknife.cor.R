@@ -7,7 +7,7 @@
 #' standard error and confidence intervals.
 #'
 #' @param x,y Numeric vectors of equal length
-#' @param d Number of observations to be deleted from data to make jackknife samples
+#' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
 #' @return A list containing a summary data frame of jackknife correlation
 #'    coefficient estimates with bias, standard error. t-statistics,
@@ -32,7 +32,7 @@
 #' j.cor$jackknife.summary
 #' j.cor$biased_cor
 #'
-jackknife.cor <- function(x, y, d, conf = 0.95){
+jackknife.cor <- function(x, y, d = 1, conf = 0.95){
   n <- length(x)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
   if((n*2)^d > 9e+06) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")

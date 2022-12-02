@@ -4,12 +4,12 @@
 \alias{jackknife.cor}
 \title{Delete-d Jackknife Estimate for Correlation between Two Variables}
 \usage{
-jackknife.cor(x, y, d, conf = 0.95)
+jackknife.cor(x, y, d = 1, conf = 0.95)
 }
 \arguments{
 \item{x, y}{Numeric vectors of equal length}
 
-\item{d}{Number of observations to be deleted from data to make jackknife samples}
+\item{d}{Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).}
 
 \item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
 }

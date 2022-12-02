@@ -4,12 +4,12 @@
 \alias{jackknife.lm}
 \title{Delete-d Jackknife Estimate for Linear Regression}
 \usage{
-jackknife.lm(formula, d, data, conf = 0.95)
+jackknife.lm(formula, d = 1, data, conf = 0.95)
 }
 \arguments{
 \item{formula}{Simple or multiple  linear regression formula with dependent and independent variables}
 
-\item{d}{Number of observations to be deleted from data to make jackknife samples}
+\item{d}{Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).}
 
 \item{data}{Data frame with dependent and independent independent variables specified in the formula}
 

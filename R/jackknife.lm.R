@@ -7,7 +7,7 @@
 #' bias standard error, standard error and confidence intervals.
 #'
 #' @param formula Simple or multiple  linear regression formula with dependent and independent variables
-#' @param d Number of observations to be deleted from data to make jackknife samples
+#' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
 #' @param data Data frame with dependent and independent independent variables specified in the formula
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
 #' @return A list containing a summary data frame of jackknife estimates
@@ -33,7 +33,7 @@
 #' j.lm$jackknife.summary
 #' summary(j.lm$lm_mod)$coefficients
 #'
-jackknife.lm <- function(formula, d,  data, conf = 0.95){
+jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
 
   n <- nrow(data)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
