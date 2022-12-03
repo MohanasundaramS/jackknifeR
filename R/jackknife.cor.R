@@ -24,7 +24,7 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [cor()] which is used to estimate correlation coefficient.
-#' @importFrom stats coefficients cor lm qnorm
+#' @importFrom stats coefficients cor qnorm
 #' @importFrom utils combn
 #' @export
 #' @examples

@@ -25,7 +25,7 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [lm()] which is used for linear regression.
-#' @importFrom stats coefficients cor lm qnorm
+#' @importFrom stats coefficients lm qnorm
 #' @importFrom utils combn
 #' @export
 #' @examples
@@ -45,7 +45,7 @@ jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
 
   lm_mod <- lm(formula, data = data) # Linear regression estimate
 
-  # A numeric vector to collect the jackknife estimates
+  # A data frame to collect the jackknife estimates
   jk <- as.data.frame(matrix(nrow = N, ncol = length(coefficients(lm_mod))))
   colnames(jk) <- names(coefficients(lm_mod))
 
