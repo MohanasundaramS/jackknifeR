@@ -1,6 +1,6 @@
 Package: jackknifeR
 Type: Package
-Title: Jackknife Linear Regression and Correlation
+Title: Delete-d Jackknife for Point and Interval Estimation
 Version: 0.1.2
 Authors@R: 
     person("S.", "Mohanasundaram", , "s.mohanasundaram@outlook.com", role = c("aut", "cre"),
