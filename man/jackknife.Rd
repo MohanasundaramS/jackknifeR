@@ -28,6 +28,7 @@ and calculates the estimates by the specified function and its bias,
 standard error, and confidence intervals.
 }
 \examples{
+## library(jackknifeR)
 fn <- function(data){
    mod <- lm(speed~dist, data = data)
    return(coef(mod))}

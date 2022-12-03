@@ -29,6 +29,7 @@
 #' @importFrom utils combn
 #' @export
 #' @examples
+#' ## library(jackknifeR)
 #' j.lm <- jackknife.lm(dist~speed, d = 2, data = cars)
 #' j.lm$jackknife.summary
 #' summary(j.lm$lm_mod)$coefficients

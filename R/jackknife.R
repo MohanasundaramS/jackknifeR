@@ -27,6 +27,7 @@
 #' @importFrom utils combn
 #' @export
 #' @examples
+#' ## library(jackknifeR)
 #' fn <- function(data){
 #'    mod <- lm(speed~dist, data = data)
 #'    return(coef(mod))}
