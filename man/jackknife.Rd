@@ -33,7 +33,7 @@ fn <- function(data){
    mod <- lm(speed~dist, data = data)
    return(coef(mod))}
 jkn <- jackknife(statistic = fn, d = 2, data = cars)
-jkn$jackknife.summary
+jkn
 
 
 }

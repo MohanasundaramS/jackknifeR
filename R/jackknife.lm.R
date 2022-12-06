@@ -38,7 +38,7 @@ jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
 
   n <- nrow(data)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*ncol(data))^d > 9e+06) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
+  if((n*ncol(data))^d > 9e+06) stop("The number of jackknife sub-samples will be huge")
   if((n*ncol(data))^d > 1e+04){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
@@ -71,8 +71,16 @@ jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
                                   ci.lower = jack_ci_lower,
                                   ci.upper = jack_ci_upper)
 
-  return(list(jackknife.summary = jackknife.summary,
-              lm_mod = lm_mod,
-              Jackknife.samples.coeff = jk))
+  jk.r <- list(jackknife.summary = jackknife.summary,
+               d = d,
+               conf.level = conf,
+               stat = formula,
+               n.jack = N,
+               original.estimate = theta_hat,
+               lm_mod = lm_mod,
+               Jackknife.samples.est = jk)
+  class(jk.r) <- "jk"
+
+  return(jk.r)
 }
 

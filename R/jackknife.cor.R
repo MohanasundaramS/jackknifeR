@@ -36,7 +36,7 @@
 jackknife.cor <- function(x, y, d = 1, conf = 0.95){
   n <- length(x)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*2)^d > 9e+06) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
+  if((n*2)^d > 9e+06) stop("The number of jackknife sub-samples will be huge")
   if((n*2)^d > 1e+04){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
@@ -62,9 +62,15 @@ jackknife.cor <- function(x, y, d = 1, conf = 0.95){
                                   t = est/jack_se,
                                   ci.lower = jack_ci_lower,
                                   ci.upper = jack_ci_upper)
+  jk.r <- list(jackknife.summary = jackknife.summary,
+               d = d,
+               conf.level = conf,
+               stat = "cor(x, y)",
+               n.jack = N,
+               original.estimate = theta_hat,
+               Jackknife.samples.est = jk)
+  class(jk.r) <- "jk"
 
-  return(list(jackknife.summary = jackknife.summary,
-              biased_cor = theta_hat,
-              Jackknife.samples.coeff = jk))
+  return(jk.r)
 }
 
