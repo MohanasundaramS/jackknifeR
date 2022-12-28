@@ -42,7 +42,7 @@ jackknife <- function(statistic, d = 1,  data, conf = 0.95){
   if(is.numeric(conf)==FALSE||conf>1||conf<0){
     stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
     }
-  if((n*ncol(data))^d > 9e+06){
+  if((n*ncol(data))^d > 9e+07){
     stop("The number of jackknife sub-samples will be huge")
     }
   if((n*ncol(data))^d > 1e+04){

@@ -36,7 +36,7 @@
 jackknife.cor <- function(x, y, d = 1, conf = 0.95){
   n <- length(x)
   if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*2)^d > 9e+06) stop("The number of jackknife sub-samples will be huge")
+  if((n*2)^d > 9e+07) stop("The number of jackknife sub-samples will be huge")
   if((n*2)^d > 1e+04){message("This may take more time. Please wait...")}
 
   cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
