@@ -25,7 +25,6 @@
 #' @seealso [jackknife.lm()] which is used for jackknifing in linear regression.
 #' @importFrom stats coefficients qnorm
 #' @importFrom utils combn
-#' @importFrom methods is
 #' @export
 #' @examples
 #' ## library(jackknifeR)
@@ -106,7 +105,7 @@ print.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 
 #' @export
 summary.jk <- function (object, ...){
-  if(!is(object,"jk")){
+  if(!inherits(object,"jk")){
     stop("Error: The object is not of class jk.")
   }
 
