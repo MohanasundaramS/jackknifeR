@@ -25,6 +25,7 @@
 #' @seealso [jackknife.lm()] which is used for jackknifing in linear regression.
 #' @importFrom stats coefficients qnorm
 #' @importFrom utils combn
+#' @importFrom methods is
 #' @export
 #' @examples
 #' ## library(jackknifeR)
