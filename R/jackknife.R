@@ -105,7 +105,7 @@ print.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 
 #' @export
 summary.jk <- function (object, ...){
-  if(!class(object)=="jk"){
+  if(!is(object,"jk")){
     stop("Error: The object is not of class jk.")
   }
 
