@@ -1,7 +1,7 @@
 Package: jackknifeR
 Type: Package
 Title: Delete-d Jackknife for Point and Interval Estimation
-Version: 0.2.0
+Version: 1.0.0
 Authors@R: 
     person("S.", "Mohanasundaram", , "s.mohanasundaram@outlook.com", role = c("aut", "cre"),
            comment = c("ORCID = 0000-0003-4639-9419"))
