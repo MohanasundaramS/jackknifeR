@@ -31,8 +31,7 @@
 #' @examples
 #' ## library(jackknifeR)
 #' j.lm <- jackknife.lm(dist~speed, d = 2, data = cars)
-#' j.lm$jackknife.summary
-#' summary(j.lm$lm_mod)$coefficients
+#' summary(j.lm)
 #'
 jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
 

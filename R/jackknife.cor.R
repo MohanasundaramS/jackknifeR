@@ -30,8 +30,7 @@
 #' @examples
 #' ## library(jackknifeR)
 #' j.cor <- jackknife.cor(cars$speed, cars$dist, d = 2)
-#' j.cor$jackknife.summary
-#' j.cor$biased_cor
+#' summary(j.cor)
 #'
 jackknife.cor <- function(x, y, d = 1, conf = 0.95){
   n <- length(x)
