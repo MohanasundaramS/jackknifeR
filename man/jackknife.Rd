@@ -4,7 +4,7 @@
 \alias{jackknife}
 \title{Delete-d Jackknife for Estimates}
 \usage{
-jackknife(statistic, d = 1, data, conf = 0.95)
+jackknife(statistic, d = 1, data, conf = 0.95, numCores = detectCores())
 }
 \arguments{
 \item{statistic}{a function returning a vector of estimates to be passed to jackknife}

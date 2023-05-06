@@ -34,52 +34,14 @@
 #' summary(j.lm)
 #'
 jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
-
+  cl <- match.call()
   n <- nrow(data)
-  if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*ncol(data))^d > 9e+07) stop("The number of jackknife sub-samples will be huge")
-  if((n*ncol(data))^d > 1e+04){message("This may take more time. Please wait...")}
-
-  cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
-  N <- ncol(cmb)     # Total number of jackknife samples
-
-  lm_mod <- lm(formula, data = data) # Linear regression estimate
-
-  # A data frame to collect the jackknife estimates
-  jk <- as.data.frame(matrix(nrow = N, ncol = length(coefficients(lm_mod))))
-  colnames(jk) <- names(coefficients(lm_mod))
-
-  for (i in 1:N) {
-    j <- cmb[,i]
-    mod <- lm(formula, data = data[-j,])
-    jk[i,] <- coefficients(mod)
-  }
-
-  theta_hat <- coefficients(lm_mod) # Regression coefficient estimates
-  theta_dot_hat <- colMeans(jk) # Mean of regression coefficient estimates of jackknife samples
-  bias <- (n-d) * (theta_dot_hat-theta_hat) # Bias
-  est <- theta_hat-bias
-  jack_se <- sqrt((n-d)/d  *  rowMeans(apply(jk, 1, function(x) (x-theta_hat)^2))) # Jackknife standard error
-  jack_ci_lower <- est-(qnorm(0.5+(conf/2))*jack_se)
-  jack_ci_upper <- est+(qnorm(0.5+(conf/2))*jack_se)
-
-  jackknife.summary <- data.frame(Estimate = est,
-                                  bias = bias,
-                                  se = jack_se,
-                                  t = est/jack_se,
-                                  ci.lower = jack_ci_lower,
-                                  ci.upper = jack_ci_upper)
-
-  jk.r <- list(jackknife.summary = jackknife.summary,
-               d = d,
-               conf.level = conf,
-               stat = formula,
-               n.jack = N,
-               original.estimate = theta_hat,
-               lm_mod = lm_mod,
-               Jackknife.samples.est = jk)
-  class(jk.r) <- "jk"
-
-  return(jk.r)
+  fn <- as.formula(formula)
+  j.lm <- jackknife(statistic = function(data){
+    coef(lm(formula = fn, data = data))
+  }, d = d, data =  data, conf = conf)
+  j.lm$call <- cl
+  return(j.lm)
 }
+
 

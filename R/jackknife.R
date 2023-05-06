@@ -23,8 +23,10 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [jackknife.lm()] which is used for jackknifing in linear regression.
-#' @importFrom stats coefficients qnorm
-#' @importFrom utils combn
+#' @importFrom stats coefficients
+#' @importFrom doParallel registerDoParallel
+#' @importFrom parallel makeCluster stopCluster
+#' @importFrom foreach foreach
 #' @export
 #' @examples
 #' ## library(jackknifeR)
@@ -36,64 +38,70 @@
 #'
 #'
 
-jackknife <- function(statistic, d = 1,  data, conf = 0.95){
+jackknife <- function(statistic, d = 1,  data, conf = 0.95, numCores = detectCores()) {
   n <- nrow(data)
+  p <- ncol(data)
+  npd <- (n * p) ^ d
+  qt_df <- n - d
 
-  if(is.numeric(conf)==FALSE||conf>1||conf<0){
+  if (is.numeric(conf) == FALSE || conf > 1 || conf < 0) {
     stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-    }
-  if((n*ncol(data))^d > 9e+07){
+  }
+  if (npd > 9e+07) {
     stop("The number of jackknife sub-samples will be huge")
-    }
-  if((n*ncol(data))^d > 1e+04){
+  }
+  if (npd > 1e+04) {
     message("This may take more time. Please wait...")
-    }
+  }
 
-  cmb <- combn(n, d) ## Row indexes to be eliminated for jackknife
-  N <- ncol(cmb)     ## Total number of jackknife samples
+  fn <- function(data){
+    statistic(data)
+  }
 
-  st <- statistic(data) ## Estimate by defined function
+  st <- fn(data) # Estimate by defined function
 
-  jk <- as.data.frame(matrix(nrow = N, ncol = length(st)))   ## A data frame to collect the jackknife estimates
-  colnames(jk) <- names(st)
+  indices <- lapply(1:n, function(i) seq(n)[-i])
 
-  for (i in 1:N){
-    j <- cmb[,i]
-    jk[i,] <- statistic(data[-j,])
-    }
+  cl <- makeCluster(numCores)
+  jk <- foreach(idx = indices, .packages = 'parallel') %do% {
+    fn(data[idx,])
+  }
 
-  theta_hat <- st ## Regression coefficient estimates
-  theta_dot_hat <- colMeans(jk) ## Mean of regression coefficient estimates of jackknife samples
-  bias <- (n-d) * (theta_dot_hat-theta_hat) ## Bias
-  est <- theta_hat-bias
-  jack_se <- sqrt((n-d)/d * ifelse(st>1, rowMeans(apply(jk, 1, function(x) (x-theta_hat)^2)),
-                                   mean(apply(jk, 1, function(x) (x-theta_hat)^2)))) ## Jackknife standard error
-  jack_ci_lower <- est-(qnorm(0.5+(conf/2))*jack_se)
-  jack_ci_upper <- est+(qnorm(0.5+(conf/2))*jack_se)
+  jk <- do.call(rbind, jk)
+
+  theta_hat <- st # Regression coefficient estimates
+  theta_dot_hat <- colMeans(jk) # Mean of regression coefficient estimates of jackknife samples
+  bias <- (n - d) * (theta_dot_hat - theta_hat) # Bias
+  est <- theta_hat - bias
+
+  se_d <- colMeans(sweep(jk, 2, theta_hat) ^ 2, na.rm = TRUE)
+  jack_se <- sqrt((n - d) / d * se_d) # Jackknife standard error
+  t_val <- qt(p = (1 - conf) / 2, df = qt_df, lower.tail = FALSE)
+  jack_ci_lower <- est - t_val * jack_se
+  jack_ci_upper <- est + t_val * jack_se
 
   jackknife.summary <- data.frame(Estimate = est,
                                   bias = bias,
                                   se = jack_se,
-                                  t = est/jack_se,
+                                  t = est / jack_se,
                                   ci.lower = jack_ci_lower,
                                   ci.upper = jack_ci_upper)
-  jk.r <- list(jackknife.summary = jackknife.summary,
+  jk.r <- list(call = match.call(),
+               jackknife.summary = jackknife.summary,
                d = d,
                conf.level = conf,
-               stat = statistic,
-               n.jack = N,
+               stat = substitute(statistic),
+               n.jack = n ^ d,
                original.estimate = theta_hat,
                Jackknife.samples.est = jk)
   class(jk.r) <- "jk"
 
+  stopCluster(cl)
   return(jk.r)
-  }
+}
 
 #' @export
 print.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  cat("\nStat Function:\n",
-      paste(ifelse(is.function(x$stat), paste(deparse(unlist(body(x$stat))), collapse = " "), deparse(x$stat)),
-            sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("\nConfidence Level: ",
       paste(x$conf.level, sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("Jackknife Summary:\n")
@@ -106,14 +114,17 @@ print.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
 #' @export
 summary.jk <- function (object, ...){
   if(!inherits(object,"jk")){
-    stop("Error: The object is not of class jk.")
+    stop("Error: The object is not of class 'jk'.")
   }
 
-  cf <- object$jackknife.summary
-  stat <- object$stat
-  org.est <- object$original.estimate
-  conf = object$conf.level
-  ans <- list(stat = stat, conf.level = conf, cf = cf, org.est = org.est)
+  ans <- list(call = object$call,
+              stat = object$stat,
+              d = object$d,
+              n.jack = object$n.jack,
+              conf.level = object$conf.level,
+              jackknife.summary = object$jackknife.summary,
+              original.estimate = object$original.estimate,
+              Jackknife.samples.est = object$Jackknife.samples.est)
 
   class(ans) <- "summary.jk"
   ans
@@ -121,18 +132,20 @@ summary.jk <- function (object, ...){
 
 #' @export
 print.summary.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  cat("\nStat Function:\n",
-      paste(ifelse(is.function(x$stat), paste(deparse(unlist(body(x$stat))), collapse = " "), deparse(x$stat)),
-            sep = "\n", collapse = "\n"), "\n", sep = "")
+  cat(cat("\nCall: "),
+      deparse(x$call), "\n", sep = "")
   cat("\nConfidence Level: ",
-      paste(x$conf.level, sep = "\n", collapse = "\n"), "\n\n", sep = "")
+      paste(x$conf.level, sep = "\n", collapse = "\n"), "\n", sep = "")
+  cat("\nd: ",
+      paste(x$d, sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("Jackknife Summary:\n")
-  print(format(x$cf, digits = digits),
+  print(format(x$jackknife.summary, digits = digits),
         print.gap = 2L, quote = FALSE)
   cat("\n")
   cat("Estimate from Original Sample:\n")
-  print(format(x$org.est, digits = digits),
+  print(format(x$original.estimate, digits = digits),
         print.gap = 2L, quote = FALSE)
   cat("\n")
   invisible(x)
 }
+

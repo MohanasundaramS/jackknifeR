@@ -32,44 +32,13 @@
 #' j.cor <- jackknife.cor(cars$speed, cars$dist, d = 2)
 #' summary(j.cor)
 #'
-jackknife.cor <- function(x, y, d = 1, conf = 0.95){
-  n <- length(x)
-  if(is.numeric(conf)==FALSE||conf>1||conf<0) stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
-  if((n*2)^d > 9e+07) stop("The number of jackknife sub-samples will be huge")
-  if((n*2)^d > 1e+04){message("This may take more time. Please wait...")}
-
-  cmb <- combn(n, d) # Row indexes to be eliminated for jackknife
-  N <- ncol(cmb)     # Total number of jackknife samples
-  jk <- numeric(N)   # A numeric vector to collect the jackknife estimates
-
-  for (i in 1:N) {
-    j <- cmb[,i]
-    jk[i] <- cor(x[-j], y[-j])
+jackknife.cor <- function(data, d = 1, conf = 0.95){
+  cl <- match.call()
+  fn <- function(data){
+    return(cor(data[,1], data[,2]))
   }
-
-  theta_hat <- cor(x, y) # Biased Correlation Estimate
-  theta_dot_hat <- mean(jk) # Mean of correlation estimates of jackknife samples
-  bias <- (n-d) * (theta_dot_hat-theta_hat) #Bias
-  est <- theta_hat - bias
-  jack_se <- sqrt(((n-d)/d)  *  mean((jk-theta_hat)^2)) # Jackknife standard error
-  jack_ci_lower <- est-(qnorm(0.5+(conf/2))*jack_se)
-  jack_ci_upper <- est+(qnorm(0.5+(conf/2))*jack_se)
-
-  jackknife.summary <- data.frame(Estimate = est,
-                                  bias = bias,
-                                  se = jack_se,
-                                  t = est/jack_se,
-                                  ci.lower = jack_ci_lower,
-                                  ci.upper = jack_ci_upper)
-  jk.r <- list(jackknife.summary = jackknife.summary,
-               d = d,
-               conf.level = conf,
-               stat = "cor(x, y)",
-               n.jack = N,
-               original.estimate = theta_hat,
-               Jackknife.samples.est = jk)
-  class(jk.r) <- "jk"
-
-  return(jk.r)
+  j.cor <- jackknife(statistic = fn, d = d, data =  data, conf = 0.95)
+  j.cor$call <- cl
+  return(j.cor)
 }
 
