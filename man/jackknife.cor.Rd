@@ -4,14 +4,16 @@
 \alias{jackknife.cor}
 \title{Delete-d Jackknife Estimate for Correlation between Two Variables}
 \usage{
-jackknife.cor(data, d = 1, conf = 0.95)
+jackknife.cor(data, d = 1, conf = 0.95, numCores = detectCores())
 }
 \arguments{
+\item{data}{A data frame with two columns of numerical values for which the jackknife estimate of correlation needs to be found. estimated}
+
 \item{d}{Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).}
 
 \item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
 
-\item{x, y}{Numeric vectors of equal length}
+\item{numCores}{Number of processors to be used}
 }
 \value{
 A list containing a summary data frame of jackknife correlation
@@ -28,7 +30,7 @@ standard error and confidence intervals.
 }
 \examples{
 ## library(jackknifeR)
-j.cor <- jackknife.cor(cars$speed, cars$dist, d = 2)
+j.cor <- jackknife.cor(cars, d = 2, numCores = 2)
 summary(j.cor)
 
 }

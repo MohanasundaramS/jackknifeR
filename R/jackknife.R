@@ -8,6 +8,7 @@
 #' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
 #' @param data Data frame with dependent and independent independent variables specified in the formula
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
+#' @param numCores Number of processors to be used
 #' @return A list containing a summary data frame of jackknife estimates
 #'    with bias, standard error. t-statistics, and confidence intervals,
 #'    estimate for the original sample and a data frame with
@@ -23,17 +24,17 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [jackknife.lm()] which is used for jackknifing in linear regression.
-#' @importFrom stats coefficients
+#' @importFrom stats coef qt as.formula
 #' @importFrom doParallel registerDoParallel
-#' @importFrom parallel makeCluster stopCluster
-#' @importFrom foreach foreach
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom foreach foreach %do%
 #' @export
 #' @examples
 #' ## library(jackknifeR)
 #' fn <- function(data){
 #'    mod <- lm(speed~dist, data = data)
 #'    return(coef(mod))}
-#' jkn <- jackknife(statistic = fn, d = 2, data = cars)
+#' jkn <- jackknife(statistic = fn, d = 2, data = cars, numCores= 2)
 #' jkn
 #'
 #'
@@ -47,10 +48,12 @@ jackknife <- function(statistic, d = 1,  data, conf = 0.95, numCores = detectCor
   if (is.numeric(conf) == FALSE || conf > 1 || conf < 0) {
     stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
   }
-  if (npd > 9e+07) {
+
+  if (npd > 9e+12) {
     stop("The number of jackknife sub-samples will be huge")
   }
-  if (npd > 1e+04) {
+
+  if (npd > 1e+05) {
     message("This may take more time. Please wait...")
   }
 
@@ -62,9 +65,11 @@ jackknife <- function(statistic, d = 1,  data, conf = 0.95, numCores = detectCor
 
   indices <- lapply(1:n, function(i) seq(n)[-i])
 
+  idx = NULL
+
   cl <- makeCluster(numCores)
   jk <- foreach(idx = indices, .packages = 'parallel') %do% {
-    fn(data[idx,])
+    fn(data[unlist(idx),])
   }
 
   jk <- do.call(rbind, jk)

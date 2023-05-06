@@ -14,6 +14,8 @@ jackknife(statistic, d = 1, data, conf = 0.95, numCores = detectCores())
 \item{data}{Data frame with dependent and independent independent variables specified in the formula}
 
 \item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
+
+\item{numCores}{Number of processors to be used}
 }
 \value{
 A list containing a summary data frame of jackknife estimates
@@ -32,7 +34,7 @@ standard error, and confidence intervals.
 fn <- function(data){
    mod <- lm(speed~dist, data = data)
    return(coef(mod))}
-jkn <- jackknife(statistic = fn, d = 2, data = cars)
+jkn <- jackknife(statistic = fn, d = 2, data = cars, numCores= 2)
 jkn
 
 

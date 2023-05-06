@@ -6,9 +6,10 @@
 #' and estimates the jackknife correlation coefficients, bias standard error,
 #' standard error and confidence intervals.
 #'
-#' @param x,y Numeric vectors of equal length
+#' @param data A data frame with two columns of numerical values for which the jackknife estimate of correlation needs to be found. estimated
 #' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
+#' @param numCores Number of processors to be used
 #' @return A list containing a summary data frame of jackknife correlation
 #'    coefficient estimates with bias, standard error. t-statistics,
 #'    and confidence intervals,correlation estimate of original data and
@@ -29,15 +30,15 @@
 #' @export
 #' @examples
 #' ## library(jackknifeR)
-#' j.cor <- jackknife.cor(cars$speed, cars$dist, d = 2)
+#' j.cor <- jackknife.cor(cars, d = 2, numCores = 2)
 #' summary(j.cor)
 #'
-jackknife.cor <- function(data, d = 1, conf = 0.95){
+jackknife.cor <- function(data, d = 1, conf = 0.95, numCores = detectCores()){
   cl <- match.call()
   fn <- function(data){
     return(cor(data[,1], data[,2]))
   }
-  j.cor <- jackknife(statistic = fn, d = d, data =  data, conf = 0.95)
+  j.cor <- jackknife(statistic = fn, d = d, data =  data, conf = 0.95, numCores = numCores)
   j.cor$call <- cl
   return(j.cor)
 }

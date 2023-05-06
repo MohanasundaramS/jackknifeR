@@ -10,6 +10,7 @@
 #' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
 #' @param data Data frame with dependent and independent independent variables specified in the formula
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
+#' @param numCores Number of processors to be used
 #' @return A list containing a summary data frame of jackknife estimates
 #'    with bias, standard error. t-statistics, and confidence intervals,
 #'    linear regression model of original data and a data frame with
@@ -25,21 +26,20 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [lm()] which is used for linear regression.
-#' @importFrom stats coefficients lm qnorm
-#' @importFrom utils combn
+#' @importFrom stats coef lm
 #' @export
 #' @examples
 #' ## library(jackknifeR)
-#' j.lm <- jackknife.lm(dist~speed, d = 2, data = cars)
+#' j.lm <- jackknife.lm(dist~speed, d = 2, data = cars, numCores = 2)
 #' summary(j.lm)
 #'
-jackknife.lm <- function(formula, d = 1,  data, conf = 0.95){
+jackknife.lm <- function(formula, d = 1,  data, conf = 0.95, numCores = detectCores()){
   cl <- match.call()
   n <- nrow(data)
   fn <- as.formula(formula)
   j.lm <- jackknife(statistic = function(data){
     coef(lm(formula = fn, data = data))
-  }, d = d, data =  data, conf = conf)
+  }, d = d, data =  data, conf = conf, numCores = numCores)
   j.lm$call <- cl
   return(j.lm)
 }

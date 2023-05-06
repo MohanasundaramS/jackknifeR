@@ -4,7 +4,7 @@
 \alias{jackknife.lm}
 \title{Delete-d Jackknife Estimate for Linear Regression}
 \usage{
-jackknife.lm(formula, d = 1, data, conf = 0.95)
+jackknife.lm(formula, d = 1, data, conf = 0.95, numCores = detectCores())
 }
 \arguments{
 \item{formula}{Simple or multiple  linear regression formula with dependent and independent variables}
@@ -14,6 +14,8 @@ jackknife.lm(formula, d = 1, data, conf = 0.95)
 \item{data}{Data frame with dependent and independent independent variables specified in the formula}
 
 \item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
+
+\item{numCores}{Number of processors to be used}
 }
 \value{
 A list containing a summary data frame of jackknife estimates
@@ -30,7 +32,7 @@ bias standard error, standard error and confidence intervals.
 }
 \examples{
 ## library(jackknifeR)
-j.lm <- jackknife.lm(dist~speed, d = 2, data = cars)
+j.lm <- jackknife.lm(dist~speed, d = 2, data = cars, numCores = 2)
 summary(j.lm)
 
 }
