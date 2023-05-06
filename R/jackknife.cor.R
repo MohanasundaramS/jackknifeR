@@ -35,10 +35,9 @@
 #'
 jackknife.cor <- function(data, d = 1, conf = 0.95, numCores = detectCores()){
   cl <- match.call()
-  fn <- function(data){
-    return(cor(data[,1], data[,2]))
-  }
-  j.cor <- jackknife(statistic = fn, d = d, data =  data, conf = 0.95, numCores = numCores)
+  j.cor <- jackknife(statistic = function(data){
+    cor(data[,1], data[,2])
+  }, d = d, data =  data, conf = conf, numCores = numCores)
   j.cor$call <- cl
   return(j.cor)
 }
