@@ -4,7 +4,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The package jackknifeR includes the functions to perform delete-d Jackknife.
+The package, jackknifeR includes the functions to perform delete-d Jackknife.
 
 ``` r
 library(jackknifeR)
