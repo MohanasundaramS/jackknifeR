@@ -29,10 +29,10 @@
 #' @importFrom stats lm.fit model.frame model.matrix model.response hatvalues
 #' @examples
 #' ## library(jackknifeR)
-#' jk <- jackknife.lm(mpg ~ wt + hp, d = 2, data = mtcars, numCores = 2)
-#' summary(jk)
+#' jk_weighted <- jackknife.lm.weighted(mpg ~ wt + hp, d = 2, data = mtcars, numCores = 2)
+#' summary(jk_weighted)
 #' @export
-jackknife.lm <- function(formula, d = 1, data, conf = 0.95, numCores = detectCores()) {
+jackknife.lm.weighted <- function(formula, d = 1, data, conf = 0.95, numCores = detectCores()) {
   cl <- match.call()
 
   # Precompute model components
@@ -40,28 +40,37 @@ jackknife.lm <- function(formula, d = 1, data, conf = 0.95, numCores = detectCor
   tm <- terms(mf)
   X <- model.matrix(tm, mf)
   var_names <- colnames(X)
-  p <- length(var_names)
+  n <- nrow(data)
+
+  # Fit original model for leverages/residuals
+  original_model <- lm(formula, data)
+  hat_values <- hatvalues(original_model)
+  residuals <- residuals(original_model)
 
   # Define statistic function
   coef_fun <- function(data_sub) {
     mf_sub <- model.frame(tm, data_sub, na.action = na.omit)
     X_sub <- model.matrix(tm, mf_sub)
     qr_X <- qr(X_sub)
-    if (qr_X$rank < p) return(rep(NA, p))
+    if (qr_X$rank < ncol(X)) return(rep(NA, ncol(X)))
     fit <- lm.fit(X_sub, model.response(mf_sub))
-    coefs <- setNames(rep(NA, p), var_names)
+    coefs <- setNames(rep(NA, ncol(X)), colnames(X))
     coefs[colnames(X_sub)] <- fit$coefficients
     coefs
   }
 
-  # Call core jackknife function
+  # Call core jackknife function with weighted parameters
   result <- jackknife(
     statistic = coef_fun,
     d = d,
     data = data,
     conf = conf,
     numCores = numCores,
-    weight = FALSE
+    weight = TRUE,
+    hat_values = hat_values,
+    residuals = residuals,
+    X = X,
+    p = ncol(X)
   )
 
   result$call <- cl

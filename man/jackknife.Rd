@@ -4,7 +4,18 @@
 \alias{jackknife}
 \title{Delete-d Jackknife for Estimates}
 \usage{
-jackknife(statistic, d = 1, data, conf = 0.95, numCores = detectCores())
+jackknife(
+  statistic,
+  d = 1,
+  data,
+  conf = 0.95,
+  numCores = detectCores(),
+  weight = FALSE,
+  hat_values = NULL,
+  residuals = NULL,
+  X = NULL,
+  p = NULL
+)
 }
 \arguments{
 \item{statistic}{a function returning a vector of estimates to be passed to jackknife}
@@ -16,6 +27,16 @@ jackknife(statistic, d = 1, data, conf = 0.95, numCores = detectCores())
 \item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
 
 \item{numCores}{Number of processors to be used}
+
+\item{weight}{Logical, TRUE for weighted jackknife standard error of regression estimates. Default weight = FALSE}
+
+\item{hat_values}{Vector of hat values (leverages) from the model. Required if `weight = TRUE}
+
+\item{residuals}{Vector of residuals from the model. Required if \code{weight = TRUE}.}
+
+\item{X}{Model matrix. Required if \code{weight = TRUE}.}
+
+\item{p}{Number of predictors in the model. Required if \code{weight = TRUE}.}
 }
 \value{
 A list containing a summary data frame of jackknife estimates
@@ -30,14 +51,15 @@ and calculates the estimates by the specified function and its bias,
 standard error, and confidence intervals.
 }
 \examples{
-## library(jackknifeR)
-fn <- function(data){
-   mod <- lm(speed~dist, data = data)
-   return(coef(mod))}
-jkn <- jackknife(statistic = fn, d = 2, data = cars, numCores= 2)
-jkn
-
-
+library(future)
+plan(multisession)  # Initialize once per session
+# For linear regression coefficients
+jk_results <- jackknife(
+statistic = function(sub_data) coef(lm(mpg ~ wt + hp, data = sub_data)),
+d = 2,
+data = mtcars,
+conf = 0.95)
+print(jk_results)
 }
 \references{
 Quenouille, M. H. (1956). Notes on Bias in Estimation.

@@ -1,3 +1,10 @@
+# jackknifeR 2.0.0
+
+* Resolved several bugs
+* Made changes to the `jackknife()` for efficient parallel processing
+* Restructured wrapper functions for efficiency.
+* Added the function `jackknife.lm.weighted()` for weighted jackknife SE
+
 # jackknifeR 1.2.0
 
 * Updated the functions with provisions for parallel processing.

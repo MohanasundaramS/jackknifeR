@@ -1,44 +1,40 @@
 #' @title Delete-d Jackknife Estimate for Correlation between Two Variables
 #'
-#' @description This function creates jackknife samples from the data by
-#' sequentially removing *d* observations from the data,
-#' calculates correlation between the two variables using the jackknife samples
-#' and estimates the jackknife correlation coefficients, bias standard error,
-#' standard error and confidence intervals.
+#' @description This function creates jackknife samples from the data by sequentially removing *d* observations, calculates the correlation, and estimates bias, standard error, and confidence intervals.
 #'
-#' @param data A data frame with two columns of numerical values for which the jackknife estimate of correlation needs to be found. estimated
-#' @param d Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).
-#' @param conf Confidence level, a positive number < 1. The default is 0.95.
-#' @param numCores Number of processors to be used
-#' @return A list containing a summary data frame of jackknife correlation
-#'    coefficient estimates with bias, standard error. t-statistics,
-#'    and confidence intervals,correlation estimate of original data and
-#'    a data frame with correlation estimates of individual jackknife samples.
-#'
-#' @references Quenouille, M. H. (1956). Notes on Bias in Estimation.
-#' *Biometrika*, *43*(3/4), 353-360.
-#' \doi{10.2307/2332914}
-#' @references Tukey, J. W. (1958). Bias and Confidence in Not-quite Large Samples.
-#' *Annals of Mathematical Statistics*, *29*(2), 614-623.
-#' \doi{10.1214/aoms/1177706647}
-#' @references Shi, X. (1988). A note on the delete-d jackknife variance estimators.
-#' *Statistics & Probability Letters*, *6*(5), 341-347.
-#' \doi{10.1016/0167-7152(88)90011-9}
-#' @seealso [cor()] which is used to estimate correlation coefficient.
-#' @importFrom stats coefficients cor qnorm
-#' @importFrom utils combn
+#' @param data A data frame with two numeric columns.
+#' @param d Number of observations to delete (default: 1).
+#' @param conf Confidence level (default: 0.95).
+#' @param numCores Number of processors (default: `detectCores()`).
+#' @return A list of class "jackknife" containing estimates, bias, standard error, and confidence intervals.
+#' @references Quenouille (1956), Tukey (1958), Shi (1988).
+#' @seealso [cor()], [jackknife()]
+#' @importFrom parallel detectCores
+#' @importFrom stats cor
 #' @export
 #' @examples
-#' ## library(jackknifeR)
 #' j.cor <- jackknife.cor(cars, d = 2, numCores = 2)
 #' summary(j.cor)
-#'
-jackknife.cor <- function(data, d = 1, conf = 0.95, numCores = detectCores()){
-  cl <- match.call()
-  j.cor <- jackknife(statistic = function(data){
-    cor(data[,1], data[,2])
-  }, d = d, data =  data, conf = conf, numCores = numCores)
-  j.cor$call <- cl
-  return(j.cor)
-}
+jackknife.cor <- function(data, d = 1, conf = 0.95, numCores = parallel::detectCores()) {
+  # Input validation
+  if (!is.data.frame(data) || ncol(data) != 2 || !all(vapply(data, is.numeric, logical(1)))) {
+    stop("data must be a 2-column numeric data frame")
+  }
 
+  cl <- match.call()
+
+  # Force scalar output with proper formatting
+  result <- jackknife(
+    statistic = function(subdata) {
+      cor_val <- cor(subdata[, 1], subdata[, 2])
+      unname(cor_val)  # Remove any names
+    },
+    d = d,
+    data = data,
+    conf = conf,
+    numCores = numCores
+  )
+
+  result$call <- cl
+  return(result)
+}

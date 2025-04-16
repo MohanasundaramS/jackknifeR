@@ -9,6 +9,11 @@
 #' @param data Data frame with dependent and independent independent variables specified in the formula
 #' @param conf Confidence level, a positive number < 1. The default is 0.95.
 #' @param numCores Number of processors to be used
+#' @param weight Logical, TRUE for weighted jackknife standard error of regression estimates. Default weight = FALSE
+#' @param hat_values Vector of hat values (leverages) from the model. Required if `weight = TRUE
+#' @param residuals Vector of residuals from the model. Required if `weight = TRUE`.
+#' @param X Model matrix. Required if `weight = TRUE`.
+#' @param p Number of predictors in the model. Required if `weight = TRUE`.
 #' @return A list containing a summary data frame of jackknife estimates
 #'    with bias, standard error. t-statistics, and confidence intervals,
 #'    estimate for the original sample and a data frame with
@@ -24,133 +29,170 @@
 #' *Statistics & Probability Letters*, *6*(5), 341-347.
 #' \doi{10.1016/0167-7152(88)90011-9}
 #' @seealso [jackknife.lm()] which is used for jackknifing in linear regression.
-#' @importFrom stats coef qt as.formula
-#' @importFrom doParallel registerDoParallel
-#' @importFrom parallel detectCores makeCluster stopCluster
-#' @importFrom foreach foreach %do%
+#' @importFrom future plan multisession
+#' @importFrom doFuture registerDoFuture
+#' @importFrom foreach foreach %dopar%
+#' @importFrom utils combn
+#' @importFrom stats model.matrix lm qt setNames
+#' @importFrom stats complete.cases na.omit pt symnum terms
+#' @importFrom future.apply future_apply
 #' @export
 #' @examples
-#' ## library(jackknifeR)
-#' fn <- function(data){
-#'    mod <- lm(speed~dist, data = data)
-#'    return(coef(mod))}
-#' jkn <- jackknife(statistic = fn, d = 2, data = cars, numCores= 2)
-#' jkn
-#'
-#'
+#' library(future)
+#' plan(multisession)  # Initialize once per session
+#' # For linear regression coefficients
+#' jk_results <- jackknife(
+#' statistic = function(sub_data) coef(lm(mpg ~ wt + hp, data = sub_data)),
+#' d = 2,
+#' data = mtcars,
+#' conf = 0.95, numCores = 2)
+#' print(jk_results)
 
-jackknife <- function(statistic, d = 1,  data, conf = 0.95, numCores = detectCores()) {
+jackknife <- function(statistic, d = 1, data, conf = 0.95, numCores = detectCores(),
+                      weight = FALSE, hat_values = NULL, residuals = NULL, X = NULL, p = NULL) {
+
+  # Initialize connection cleanup
+  on.exit({
+    future::plan(future::sequential)  # Reset to sequential plan
+    closeAllConnections()            # Close any remaining connections
+  })
+
+  idx <- NULL
   n <- nrow(data)
-  p <- ncol(data)
-  npd <- (n * p) ^ d
-  qt_df <- n - d
+  nd <- choose(n, d)
 
-  if (is.numeric(conf) == FALSE || conf > 1 || conf < 0) {
-    stop("Error: confidence level must be a numerical value between 0 and 1, e.g. 0.95")
+  # Common setup
+  indices <- utils::combn(n, d, simplify = FALSE)
+
+  # Parallel setup
+  registerDoFuture()
+  plan(multisession, workers = numCores)
+
+  if (weight) {
+    # ---- Weighted Jackknife Core ----
+    # Compute sum of leverages for deleted observations
+    sum_hat <- future.apply::future_sapply(indices, function(idx) sum(hat_values[idx]))
+
+    # Compute subsample coefficients
+    jk <- foreach::foreach(idx = indices, .combine = rbind) %dopar% {
+      statistic(data[-idx, ])
+    }
+
+    # Remove invalid subsamples
+    valid <- complete.cases(jk)
+    jk <- jk[valid, ]
+    sum_hat <- sum_hat[valid]
+    nd_valid <- nrow(jk)
+
+    # Compute delete-d scaling
+    scaling_factor <- (n - d) / (d * nd)
+
+    # ---- Critical Fix: Leverage-adjusted residuals ----
+    # Compute HC3-adjusted residuals
+    adjusted_residuals <- residuals^2 / (1 - hat_values)^2  # HC3 adjustment
+
+    # Compute Hinkley's weighted variance with scaling
+    sum_Rxx <- crossprod(X, diag(adjusted_residuals) %*% X)
+    D0_inv <- solve(crossprod(X))
+    V_w <- scaling_factor * (n / (n - p)) * D0_inv %*% sum_Rxx %*% D0_inv
+    se <- sqrt(diag(V_w))
+
+    # Compute bias using original estimates
+    theta_hat <- statistic(data)
+    theta_dot <- colMeans(jk)
+    bias <- ((n - d)/d) * (theta_dot - theta_hat)
+  } else {
+    # ---- Original Unweighted Method (Unchanged) ----
+    jk <- foreach::foreach(idx = indices, .combine = rbind) %dopar% {
+      res <- statistic(data[-idx, ])
+      matrix(res, nrow = 1)  # Ensure output is matrix
+    }
+    valid <- complete.cases(jk)
+    jk <- jk[valid, , drop = FALSE]  # Keep as matrix
+    nd_valid <- nrow(jk)
+
+    theta_hat <- statistic(data)
+    theta_dot <- colMeans(jk)
+    bias <- ((n - d)/d) * (theta_dot - theta_hat)
+    ssq <- colSums(sweep(jk, 2, theta_dot, "-")^2)
+    se <- sqrt(((n - d)/(d * nd_valid)) * ssq)
   }
 
-  if (npd > 9e+12) {
-    stop("The number of jackknife sub-samples will be huge")
-  }
+  # Explicitly stop clusters at end
+  future::plan(future::sequential)
+  closeAllConnections()
 
-  if (npd > 1e+05) {
-    message("This may take more time. Please wait...")
-  }
+  # Common post-processing
+  df <- n - d - ifelse(weight, p, 0)
+  t_val <- qt((1 + conf)/2, df = df)
+  ci <- theta_hat - bias + t_val * se %o% c(-1, 1)
 
-  fn <- function(data){
-    statistic(data)
-  }
-
-  st <- fn(data) # Estimate by defined function
-
-  indices <- lapply(1:n, function(i) seq(n)[-i])
-
-  idx = NULL
-
-  cl <- makeCluster(numCores)
-  jk <- foreach(idx = indices, .packages = 'parallel') %do% {
-    fn(data[unlist(idx),])
-  }
-
-  jk <- do.call(rbind, jk)
-
-  theta_hat <- st # Regression coefficient estimates
-  theta_dot_hat <- colMeans(jk) # Mean of regression coefficient estimates of jackknife samples
-  bias <- (n - d) * (theta_dot_hat - theta_hat) # Bias
-  est <- theta_hat - bias
-
-  se_d <- colMeans(sweep(jk, 2, theta_hat) ^ 2, na.rm = TRUE)
-  jack_se <- sqrt((n - d) / d * se_d) # Jackknife standard error
-  t_val <- qt(p = (1 - conf) / 2, df = qt_df, lower.tail = FALSE)
-  jack_ci_lower <- est - t_val * jack_se
-  jack_ci_upper <- est + t_val * jack_se
-
-  jackknife.summary <- data.frame(Estimate = est,
-                                  bias = bias,
-                                  se = jack_se,
-                                  t = est / jack_se,
-                                  ci.lower = jack_ci_lower,
-                                  ci.upper = jack_ci_upper)
-  jk.r <- list(call = match.call(),
-               jackknife.summary = jackknife.summary,
-               d = d,
-               conf.level = conf,
-               stat = substitute(statistic),
-               n.jack = n ^ d,
-               original.estimate = theta_hat,
-               Jackknife.samples.est = jk)
-  class(jk.r) <- "jk"
-
-  stopCluster(cl)
-  return(jk.r)
+  structure(
+    list(
+      estimates = theta_hat,
+      bias = bias,
+      df = df,
+      se = se,
+      ci = ci,
+      conf = conf,
+      d = d,
+      call = match.call()
+    ),
+    class = "jackknife"
+  )
 }
 
 #' @export
-print.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  cat("\nConfidence Level: ",
-      paste(x$conf.level, sep = "\n", collapse = "\n"), "\n\n", sep = "")
-  cat("Jackknife Summary:\n")
-  print(format(x$jackknife.summary, digits = digits),
-        print.gap = 2L, quote = FALSE)
-  cat("\n")
-  invisible(x)
+print.jackknife <- function(x, ...) {
+  cat("Delete-", x$d, " Jackknife Results\n", sep = "")
+  cat("Confidence Level: ", x$conf, "\n\n")
+  print(data.frame(
+    Original_Estimate = x$estimates,
+    Bias = x$bias,
+    SE = x$se,
+    CI_Lower = x$ci[,1],
+    CI_Upper = x$ci[,2]
+  ))
 }
 
 #' @export
-summary.jk <- function (object, ...){
-  if(!inherits(object,"jk")){
-    stop("Error: The object is not of class 'jk'.")
-  }
+summary.jackknife <- function(object, ...) {
+  # Calculate significance stars and p-values
+  t_stat <- object$estimates / object$se
+  p_value <- 2 * pt(-abs(t_stat), df = object$df)
+  stars <- symnum(p_value, corr = FALSE, na = FALSE,
+                  cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                  symbols = c("***", "**", "*", ".", " "))
 
-  ans <- list(call = object$call,
-              stat = object$stat,
-              d = object$d,
-              n.jack = object$n.jack,
-              conf.level = object$conf.level,
-              jackknife.summary = object$jackknife.summary,
-              original.estimate = object$original.estimate,
-              Jackknife.samples.est = object$Jackknife.samples.est)
+  # Create formatted data frame
+  summary_df <- data.frame(
+    Estimate = object$estimates,
+    Bias = object$bias,
+    Std.Error = object$se,
+    `t value` = t_stat,
+    `Pr(>|t|)` = format.pval(p_value),
+    ` ` = stars,
+    CI.Lower = object$ci[,1],
+    CI.Upper = object$ci[,2],
+    check.names = FALSE
+  )
 
-  class(ans) <- "summary.jk"
-  ans
+  structure(
+    list(
+      summary = summary_df,
+      d = object$d,
+      conf = object$conf,
+      call = object$call
+    ),
+    class = "summary.jackknife"
+  )
 }
 
 #' @export
-print.summary.jk <- function(x, digits = max(3L, getOption("digits") - 3L), ...){
-  cat(cat("\nCall: "),
-      deparse(x$call), "\n", sep = "")
-  cat("\nConfidence Level: ",
-      paste(x$conf.level, sep = "\n", collapse = "\n"), "\n", sep = "")
-  cat("\nd: ",
-      paste(x$d, sep = "\n", collapse = "\n"), "\n\n", sep = "")
-  cat("Jackknife Summary:\n")
-  print(format(x$jackknife.summary, digits = digits),
-        print.gap = 2L, quote = FALSE)
-  cat("\n")
-  cat("Estimate from Original Sample:\n")
-  print(format(x$original.estimate, digits = digits),
-        print.gap = 2L, quote = FALSE)
-  cat("\n")
-  invisible(x)
+print.summary.jackknife <- function(x, ...) {
+  cat("\nCall:\n")
+  print(x$call)
+  cat("\nDelete-", x$d, " Jackknife Results (", x$conf*100, "% CI)\n", sep="")
+  print(x$summary, digits = 4, na.print = "-")
+  cat("\n---\nSignif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
 }
-

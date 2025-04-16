@@ -4,49 +4,30 @@
 \alias{jackknife.cor}
 \title{Delete-d Jackknife Estimate for Correlation between Two Variables}
 \usage{
-jackknife.cor(data, d = 1, conf = 0.95, numCores = detectCores())
+jackknife.cor(data, d = 1, conf = 0.95, numCores = parallel::detectCores())
 }
 \arguments{
-\item{data}{A data frame with two columns of numerical values for which the jackknife estimate of correlation needs to be found. estimated}
+\item{data}{A data frame with two numeric columns.}
 
-\item{d}{Number of observations to be deleted from data to make jackknife samples. The default is 1 (for delete-1 jackknife).}
+\item{d}{Number of observations to delete (default: 1).}
 
-\item{conf}{Confidence level, a positive number < 1. The default is 0.95.}
+\item{conf}{Confidence level (default: 0.95).}
 
-\item{numCores}{Number of processors to be used}
+\item{numCores}{Number of processors (default: \code{detectCores()}).}
 }
 \value{
-A list containing a summary data frame of jackknife correlation
-coefficient estimates with bias, standard error. t-statistics,
-and confidence intervals,correlation estimate of original data and
-a data frame with correlation estimates of individual jackknife samples.
+A list of class "jackknife" containing estimates, bias, standard error, and confidence intervals.
 }
 \description{
-This function creates jackknife samples from the data by
-sequentially removing \emph{d} observations from the data,
-calculates correlation between the two variables using the jackknife samples
-and estimates the jackknife correlation coefficients, bias standard error,
-standard error and confidence intervals.
+This function creates jackknife samples from the data by sequentially removing \emph{d} observations, calculates the correlation, and estimates bias, standard error, and confidence intervals.
 }
 \examples{
-## library(jackknifeR)
 j.cor <- jackknife.cor(cars, d = 2, numCores = 2)
 summary(j.cor)
-
 }
 \references{
-Quenouille, M. H. (1956). Notes on Bias in Estimation.
-\emph{Biometrika}, \emph{43}(3/4), 353-360.
-\doi{10.2307/2332914}
-
-Tukey, J. W. (1958). Bias and Confidence in Not-quite Large Samples.
-\emph{Annals of Mathematical Statistics}, \emph{29}(2), 614-623.
-\doi{10.1214/aoms/1177706647}
-
-Shi, X. (1988). A note on the delete-d jackknife variance estimators.
-\emph{Statistics & Probability Letters}, \emph{6}(5), 341-347.
-\doi{10.1016/0167-7152(88)90011-9}
+Quenouille (1956), Tukey (1958), Shi (1988).
 }
 \seealso{
-\code{\link[=cor]{cor()}} which is used to estimate correlation coefficient.
+\code{\link[=cor]{cor()}}, \code{\link[=jackknife]{jackknife()}}
 }
